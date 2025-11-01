@@ -45,7 +45,7 @@ function renderMemorials(list) {
   memorialsContainer.innerHTML = "";
 
   if (list.length === 0) {
-    memorialsContainer.innerHTML = `<p style="text-align:center;color:#6b7280;margin-top:20px;">Sonuç bulunamadı.</p>`;
+    memorialsContainer.innerHTML = `<p style="text-align:center;color:#6b7280;margin-top:20px;">No results found.</p>`;
     console.log("No results, showing empty message"); // DEBUG: Boş liste durumunda
     return;
   }
@@ -57,11 +57,12 @@ function renderMemorials(list) {
       <div class="card-header">
         <h3>${m.name}</h3>
         <div class="card-actions">
-          <button class="delete-btn" data-id="${m.id || 'no-id'}" title="Sil">🗑️</button>
+          <button class="delete-btn" data-id="${m.id || 'no-id'}" title="Delete">🗑️</button>
         </div>
       </div>
       <p class="dates">${m.birth} – ${m.death}</p>
       <p class="brief">${m.bio}</p>
+      <a href="detail.html?id=${m.id}" class="view-link">View Details</a>  <!-- YENİ: Detay linki -->
     `;
     memorialsContainer.appendChild(card);
   });
@@ -81,7 +82,7 @@ function handleFormSubmit(e) {
   const bio = document.getElementById("brief-bio").value.trim();
 
   if (!name || !birth || !death || !bio) {
-    alert("Lütfen tüm alanları doldurun!");
+    alert("Please fill all fields!");
     return;
   }
 
@@ -107,11 +108,11 @@ function deleteMemorial(id) {
 
   if (!id || id === 'undefined' || id === 'no-id') {
     console.error("Invalid ID for deletion:", id, "- Aborting!"); // DEBUG: Geçersiz ID kontrolü
-    alert("Hata: Silinecek öğenin ID'si geçersiz. Veritabanını temizleyip yeniden deneyin.");
+    alert("Error: Invalid ID for the item to delete. Try clearing the database and retrying.");
     return;
   }
 
-  const confirmed = confirm("Bu kişiyi silmek istediğine emin misin?");
+  const confirmed = confirm("Are you sure you want to delete this person?");
   console.log("User confirmed delete:", confirmed); // DEBUG: Onay durumunu logla
   if (!confirmed) return;
 

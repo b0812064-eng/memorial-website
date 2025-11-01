@@ -1,24 +1,24 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Online Anıt Sayfaları</title>
+  <title>Online Memorial Pages</title>
   <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> <!-- YENİ: Supabase SDK (Database bağlantısı) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <!-- Header / Hero -->
   <header class="site-header home-header">
     <div class="container header-content">
-      <h1>Online Anıt Sayfaları</h1>
+      <h1>Memorial</h1>
       <div class="header-actions">
         <div class="search-box">
-          <input type="text" id="search-input" placeholder="İsim ara..." aria-label="İsim ara">
-          <button id="search-button" class="primary-button">Ara</button>
+          <input type="text" id="search-input" placeholder="Search by name..." aria-label="Search by name">
+          <button id="search-button" class="primary-button">Search</button>
         </div>
-        <button id="create-new" class="primary-button">+ Yeni Sayfa Oluştur</button>
+        <button id="create-new" class="primary-button">+ Add New Page</button>
       </div>
     </div>
   </header>
@@ -26,40 +26,40 @@
   <!-- Main Content -->
   <main class="container">
     <section id="memorials-list">
-      <h2>Anıt Sayfaları</h2>
+      <h2>Memorial Pages</h2>
       <div id="memorials" class="memorials-grid">
-        <!-- Anıt sayfaları JS ile buraya eklenecek -->
+        <!-- Memorial pages will be added here via JS -->
       </div>
     </section>
   </main>
 
-  <!-- Modal: Yeni Sayfa Oluştur -->
+  <!-- Modal: Create New Page -->
   <div id="create-modal" class="modal" aria-hidden="true">
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <button class="modal-close" aria-label="Kapat">×</button>
-      <h2 id="modal-title">Yeni Anıt Sayfası Oluştur</h2>
+      <button class="modal-close" aria-label="Close">×</button>
+      <h2 id="modal-title">Create New Memorial Page</h2>
       <form id="create-form">
         <div class="form-group">
-          <label for="person-name">İsim Soyisim</label>
-          <input type="text" id="person-name" placeholder="Örn: Ahmet Yılmaz" required>
+          <label for="person-name">Name Surname</label>
+          <input type="text" id="person-name" placeholder="e.g.: John Smith" required>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="birth-date">Doğum Tarihi</label>
+            <label for="birth-date">Birth Date</label>
             <input type="date" id="birth-date" required>
           </div>
           <div class="form-group">
-            <label for="death-date">Vefat Tarihi</label>
+            <label for="death-date">Death Date</label>
             <input type="date" id="death-date" required>
           </div>
         </div>
         <div class="form-group">
-          <label for="brief-bio">Kısa Biyografi</label>
-          <textarea id="brief-bio" rows="4" placeholder="Hayatı hakkında kısa bilgi..." required></textarea>
+          <label for="brief-bio">Short Biography</label>
+          <textarea id="brief-bio" rows="4" placeholder="Brief information about their life..." required></textarea>
         </div>
         <div class="form-actions">
-          <button type="submit" class="primary-button">Oluştur</button>
-          <button type="button" class="secondary-button modal-cancel">İptal</button>
+          <button type="submit" class="primary-button">Create</button>
+          <button type="button" class="secondary-button modal-cancel">Cancel</button>
         </div>
       </form>
     </div>
@@ -68,7 +68,7 @@
   <!-- Footer -->
   <footer class="site-footer">
     <div class="container">
-      <small>Sevdiklerimizin anısına...</small>
+      <small>In memory of our loved ones...</small>
     </div>
   </footer>
 

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Details - Online Memorial Pages</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header home-header">
+    <div class="container header-content">
+      <h1><a href="index.html" style="color: white; text-decoration: none;">Online Memorial Pages</a></h1>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <section id="detail-content">
+      <!-- Details will be added here via JS -->
+      <div id="detail-placeholder" style="text-align: center; padding: 40px; color: var(--muted);">
+        <p>Loading...</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <small>In memory of our loved ones...</small>
+    </div>
+  </footer>
+
+  <!-- Back Button (Modal-like, but fixed) -->
+  <button id="back-button" class="back-button" style="display: none;">← Back to Homepage</button>
+
+  <!-- JS -->
+  <script src="detail.js"></script>
+</body>
+</html>
