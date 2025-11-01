@@ -1,4 +1,4 @@
-// ---- HTML elementlerini seçelim ----
+// Select HTML elements
 const memorialsContainer = document.getElementById("memorials");
 const searchInput = document.getElementById("search-input");
 const searchButton = document.getElementById("search-button");
@@ -8,11 +8,11 @@ const closeModalBtn = document.querySelector(".modal-close");
 const cancelModalBtn = document.querySelector(".modal-cancel");
 const form = document.getElementById("create-form");
 
-// ---- LocalStorage'dan veri yükleme ----
+// Load data from LocalStorage
 let memorials = JSON.parse(localStorage.getItem("memorials")) || [];
-console.log("Initial memorials loaded:", memorials); // DEBUG: Başlangıç verilerini logla
+console.log("Initial memorials loaded:", memorials); // DEBUG: Log initial data
 
-// ---- Migration: ID'siz öğelere ID ata (eski veriler için) ----
+// Migration: Assign IDs to items without IDs (for old data)
 function migrateMemorials() {
   let changed = false;
   memorials = memorials.map((m) => {
@@ -30,23 +30,59 @@ function migrateMemorials() {
   }
 }
 
-// Migration'ı uygula
+// Apply migration
 migrateMemorials();
 
-// ---- LocalStorage'a kaydetme ----
+// NEW: Add example memorials if none exist
+function initExamples() {
+  if (memorials.length === 0) {
+    console.log("No memorials found, adding examples"); // DEBUG: Log init
+    const examples = [
+      {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        name: "John Smith",
+        birth: "1950-01-15",
+        death: "2020-05-20",
+        bio: "John was a dedicated teacher for 40 years, enlightening young minds. He is remembered for his love of family and nature. Rest in peace."
+      },
+      {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        name: "Mary Johnson",
+        birth: "1965-03-10",
+        death: "2022-11-12",
+        bio: "Mary was a compassionate nurse who saved countless lives. Her warm smile and kindness inspired everyone around her. Forever in our hearts."
+      },
+      {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        name: "Robert Wilson",
+        birth: "1940-07-22",
+        death: "2019-09-05",
+        bio: "Robert was a skilled carpenter who supported his family with pride. His stories and wise words remain unforgettable. Lights eternal."
+      }
+    ];
+    memorials.push(...examples);
+    saveMemorials();
+    console.log("Examples added:", examples.map(e => e.name)); // DEBUG: Log added
+  }
+}
+
+// Initialize examples
+initExamples();
+
+// Save to LocalStorage
 function saveMemorials() {
-  console.log("Saving memorials to LocalStorage:", memorials); // DEBUG: Kaydetme öncesi array'i logla
+  console.log("Saving memorials to LocalStorage:", memorials); // DEBUG: Log array before saving
   localStorage.setItem("memorials", JSON.stringify(memorials));
 }
 
-// ---- Kartları render et ----
+// Render cards
 function renderMemorials(list) {
-  console.log("Rendering memorials with list:", list); // DEBUG: Render edilecek listeyi logla
+  console.log("Rendering memorials with list:", list); // DEBUG: Log list to render
   memorialsContainer.innerHTML = "";
 
   if (list.length === 0) {
     memorialsContainer.innerHTML = `<p style="text-align:center;color:#6b7280;margin-top:20px;">No results found.</p>`;
-    console.log("No results, showing empty message"); // DEBUG: Boş liste durumunda
+    console.log("No results, showing empty message"); // DEBUG: Empty list case
     return;
   }
 
@@ -62,17 +98,17 @@ function renderMemorials(list) {
       </div>
       <p class="dates">${m.birth} – ${m.death}</p>
       <p class="brief">${m.bio}</p>
-      <a href="detail.html?id=${m.id}" class="view-link">View Details</a>  <!-- YENİ: Detay linki -->
+      <a href="detail.html?id=${m.id}" class="view-link">View Details</a>  <!-- NEW: Details link -->
     `;
     memorialsContainer.appendChild(card);
   });
 
-  console.log("Rendered", list.length, "cards. Delete buttons count:", document.querySelectorAll(".delete-btn").length); // DEBUG: Render sonrası buton sayısını logla
-  // Her kartın ID'sini logla (gizlilik için sadece ilk 2'sini)
+  console.log("Rendered", list.length, "cards. Delete buttons count:", document.querySelectorAll(".delete-btn").length); // DEBUG: Log after render
+  // Log sample IDs (privacy: only first 2)
   console.log("Sample IDs in rendered cards:", list.slice(0, 2).map(m => m.id));
 }
 
-// ---- Yeni kişi ekleme ----
+// Add new person
 function handleFormSubmit(e) {
   e.preventDefault();
 
@@ -94,67 +130,67 @@ function handleFormSubmit(e) {
     bio,
   };
 
-  console.log("Adding new memorial:", newMemorial); // DEBUG: Yeni eklenen objeyi logla
+  console.log("Adding new memorial:", newMemorial); // DEBUG: Log new item
   memorials.push(newMemorial);
   saveMemorials();
   closeModal();
   renderMemorials(memorials);
 }
 
-// ---- Silme ----
+// Delete
 function deleteMemorial(id) {
-  console.log("deleteMemorial called with ID:", id); // DEBUG: Fonksiyon çağrıldığında ID'yi logla
-  console.log("Current memorials before delete:", memorials); // DEBUG: Silme öncesi array
+  console.log("deleteMemorial called with ID:", id); // DEBUG: Log on call
+  console.log("Current memorials before delete:", memorials); // DEBUG: Log before delete
 
   if (!id || id === 'undefined' || id === 'no-id') {
-    console.error("Invalid ID for deletion:", id, "- Aborting!"); // DEBUG: Geçersiz ID kontrolü
+    console.error("Invalid ID for deletion:", id, "- Aborting!"); // DEBUG: Invalid ID check
     alert("Error: Invalid ID for the item to delete. Try clearing the database and retrying.");
     return;
   }
 
   const confirmed = confirm("Are you sure you want to delete this person?");
-  console.log("User confirmed delete:", confirmed); // DEBUG: Onay durumunu logla
+  console.log("User confirmed delete:", confirmed); // DEBUG: Log confirmation
   if (!confirmed) return;
 
-  // id eşleşmesi string olarak yapılır
+  // Match ID as string
   const beforeLength = memorials.length;
   memorials = memorials.filter((m) => {
     const shouldKeep = m.id !== id;
-    if (!shouldKeep) console.log("Deleting memorial with ID:", m.id, "Name:", m.name); // DEBUG: Silinecek öğeyi logla
+    if (!shouldKeep) console.log("Deleting memorial with ID:", m.id, "Name:", m.name); // DEBUG: Log deleted item
     return shouldKeep;
   });
   const afterLength = memorials.length;
-  console.log("Memorials after filter - before:", beforeLength, "after:", afterLength); // DEBUG: Uzunluk değişikliğini logla
+  console.log("Memorials after filter - before:", beforeLength, "after:", afterLength); // DEBUG: Log length change
 
   saveMemorials();
   renderMemorials(memorials);
 }
 
-// ---- Arama ----
+// Search
 function searchMemorials() {
   const q = searchInput.value.trim().toLowerCase();
-  console.log("Searching for:", q); // DEBUG: Arama sorgusunu logla
+  console.log("Searching for:", q); // DEBUG: Log query
   const filtered = memorials.filter((m) =>
     m.name.toLowerCase().includes(q)
   );
-  console.log("Filtered results:", filtered); // DEBUG: Filtreli listeyi logla
+  console.log("Filtered results:", filtered); // DEBUG: Log filtered list
   renderMemorials(filtered);
 }
 
-// ---- Modal kontrolü ----
+// Modal controls
 function openModal() {
   modal.setAttribute("aria-hidden", "false");
-  console.log("Modal opened"); // DEBUG: Modal açılışını logla
+  console.log("Modal opened"); // DEBUG: Log open
 }
 function closeModal() {
-  // FOCUS TEMİZLEME: Ana sayfaya focus taşı (aria-hidden sorununu çözer)
-  document.body.focus(); // Veya document.activeElement?.blur(); kullanabilirsin
+  // FOCUS RESET: Move focus to main page (fixes aria-hidden issues)
+  document.body.focus(); // Or document.activeElement?.blur();
   modal.setAttribute("aria-hidden", "true");
   form.reset();
-  console.log("Modal closed and form reset"); // DEBUG: Modal kapanışını logla
+  console.log("Modal closed and form reset"); // DEBUG: Log close
 }
 
-// ---- Event Listeners ----
+// Event Listeners
 createButton.addEventListener("click", openModal);
 closeModalBtn.addEventListener("click", closeModal);
 cancelModalBtn.addEventListener("click", closeModal);
@@ -164,17 +200,17 @@ searchInput.addEventListener("keyup", (e) => {
   if (e.key === "Enter") searchMemorials();
 });
 
-// ---- Silme için Event Delegation (Tüm container'a ekle, dinamik butonlar için güvenli) ----
+// Event Delegation for Delete (safe for dynamic buttons)
 memorialsContainer.addEventListener("click", (e) => {
-  console.log("Container clicked on:", e.target); // DEBUG: Tıklanan elementi logla
-  console.log("Target classes:", e.target.classList); // DEBUG: Class'ları logla
+  console.log("Container clicked on:", e.target); // DEBUG: Log clicked element
+  console.log("Target classes:", e.target.classList); // DEBUG: Log classes
   if (e.target.classList.contains("delete-btn")) {
     const id = e.target.dataset.id;
-    console.log("Delete button clicked, ID:", id); // DEBUG: Buton tıklanınca ID'yi logla
-    if (!id || id === 'undefined') console.error("No/Invalid ID found on delete button!"); // DEBUG: ID yoksa hata logla
+    console.log("Delete button clicked, ID:", id); // DEBUG: Log on click
+    if (!id || id === 'undefined') console.error("No/Invalid ID found on delete button!"); // DEBUG: Log error
     deleteMemorial(id);
   }
 });
 
-// ---- Başlangıçta kartları yükle ----
+// Load cards on start
 renderMemorials(memorials);
