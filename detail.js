@@ -2,8 +2,8 @@
 const detailContent = document.getElementById("detail-placeholder");
 const backButton = document.getElementById("back-button");
 
-// Backend URL (local development)
-const API_BASE = 'http://localhost:3000';
+// Backend URL (DEPLOYED SERVER)
+const API_BASE = 'https://memorial-website-k2m7.onrender.com';
 
 // Get ID from URL
 function getMemorialId() {
@@ -17,7 +17,7 @@ async function loadMemorial(id) {
     const res = await fetch(`${API_BASE}/memorials/${id}`);
     if (!res.ok) throw new Error('Memorial not found');
     const data = await res.json();
-    console.log("Loaded detail for:", data.name); // DEBUG
+    console.log("Loaded detail for:", data.name);
     return data;
   } catch (err) {
     console.error('Load error:', err);
@@ -78,7 +78,7 @@ backButton.addEventListener("click", () => {
 function formatDate(dateStr) {
   if (!dateStr) return '';
   const date = new Date(dateStr);
-  return date.toISOString().split('T')[0];  // YYYY-MM-DD format
+  return date.toISOString().split('T')[0];
 }
 
 // Initialize
