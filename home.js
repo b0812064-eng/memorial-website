@@ -8,71 +8,87 @@ const closeModalBtn = document.querySelector(".modal-close");
 const cancelModalBtn = document.querySelector(".modal-cancel");
 const form = document.getElementById("create-form");
 
-// Load data from LocalStorage
-let memorials = JSON.parse(localStorage.getItem("memorials")) || [];
-console.log("Initial memorials loaded:", memorials); // DEBUG: Log initial data
+// Backend URL (local development)
+const API_BASE = 'http://localhost:3000';
 
-// Migration: Assign IDs to items without IDs (for old data)
-function migrateMemorials() {
-  let changed = false;
-  memorials = memorials.map((m) => {
-    if (!m.id) {
-      const newId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-      console.log("Assigning new ID to old memorial:", m.name, "->", newId); // DEBUG: Migration log
-      changed = true;
-      return { ...m, id: newId };
-    }
-    return m;
-  });
-  if (changed) {
-    console.log("Migration completed - saving updated memorials"); // DEBUG
-    saveMemorials();
+// Load data from backend
+async function loadMemorials() {
+  try {
+    const res = await fetch(`${API_BASE}/memorials`);
+    if (!res.ok) throw new Error('Failed to load');
+    const data = await res.json();
+    console.log("Initial memorials loaded:", data); // DEBUG: Log initial data
+    return data;
+  } catch (err) {
+    console.error('Load error:', err);
+    return [];
   }
 }
 
-// Apply migration
-migrateMemorials();
-
-// NEW: Add example memorials if none exist
-function initExamples() {
-  if (memorials.length === 0) {
-    console.log("No memorials found, adding examples"); // DEBUG: Log init
-    const examples = [
-      {
-        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        name: "John Smith",
-        birth: "1950-01-15",
-        death: "2020-05-20",
-        bio: "John was a dedicated teacher for 40 years, enlightening young minds. He is remembered for his love of family and nature. Rest in peace."
-      },
-      {
-        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        name: "Mary Johnson",
-        birth: "1965-03-10",
-        death: "2022-11-12",
-        bio: "Mary was a compassionate nurse who saved countless lives. Her warm smile and kindness inspired everyone around her. Forever in our hearts."
-      },
-      {
-        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        name: "Robert Wilson",
-        birth: "1940-07-22",
-        death: "2019-09-05",
-        bio: "Robert was a skilled carpenter who supported his family with pride. His stories and wise words remain unforgettable. Lights eternal."
-      }
-    ];
-    memorials.push(...examples);
-    saveMemorials();
-    console.log("Examples added:", examples.map(e => e.name)); // DEBUG: Log added
+// Save new memorial to backend
+async function saveMemorial(newMemorial) {
+  try {
+    const res = await fetch(`${API_BASE}/memorials`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newMemorial)
+    });
+    if (!res.ok) throw new Error('Failed to save');
+    const data = await res.json();
+    console.log("Added new memorial:", data); // DEBUG: Log new item
+    return data;
+  } catch (err) {
+    console.error('Save error:', err);
+    alert("Error saving memorial!");
+    return null;
   }
 }
 
-// Initialize examples
-initExamples();
+// Delete memorial from backend
+async function deleteMemorial(id) {
+  console.log("deleteMemorial called with ID:", id); // DEBUG: Log on call
 
-// Save to LocalStorage
-function saveMemorials() {
-  console.log("Saving memorials to LocalStorage:", memorials); // DEBUG: Log array before saving
-  localStorage.setItem("memorials", JSON.stringify(memorials));
+  if (!id) {
+    console.error("Invalid ID for deletion:", id, "- Aborting!"); // DEBUG: Invalid ID check
+    alert("Error: Invalid ID for the item to delete.");
+    return;
+  }
+
+  const confirmed = confirm("Are you sure you want to delete this person?");
+  console.log("User confirmed delete:", confirmed); // DEBUG: Log confirmation
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/memorials/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete');
+    console.log("Deleted memorial:", id); // DEBUG: Log deleted item
+    const updatedList = await loadMemorials();
+    renderMemorials(updatedList);
+  } catch (err) {
+    console.error('Delete error:', err);
+    alert("Error deleting memorial!");
+  }
+}
+
+// Search memorials from backend
+async function searchMemorials() {
+  const q = searchInput.value.trim().toLowerCase();
+  console.log("Searching for:", q); // DEBUG: Log query
+  if (!q) {
+    const all = await loadMemorials();
+    renderMemorials(all);
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/memorials/search?q=${encodeURIComponent(q)}`);
+    if (!res.ok) throw new Error('Failed to search');
+    const filtered = await res.json();
+    console.log("Filtered results:", filtered); // DEBUG: Log filtered list
+    renderMemorials(filtered);
+  } catch (err) {
+    console.error('Search error:', err);
+    alert("Error searching memorials!");
+  }
 }
 
 // Render cards
@@ -86,17 +102,17 @@ function renderMemorials(list) {
     return;
   }
 
-  list.forEach((m, index) => {
+  list.forEach((m) => {
     const card = document.createElement("div");
     card.className = "memorial-card";
     card.innerHTML = `
       <div class="card-header">
         <h3>${m.name}</h3>
         <div class="card-actions">
-          <button class="delete-btn" data-id="${m.id || 'no-id'}" title="Delete">🗑️</button>
+          <button class="delete-btn" data-id="${m.id}" title="Delete">🗑️</button>
         </div>
       </div>
-      <p class="dates">${m.birth} – ${m.death}</p>
+      <p class="dates">${formatDate(m.birth)} – ${formatDate(m.death)}</p>
       <p class="brief">${m.bio}</p>
       <a href="detail.html?id=${m.id}" class="view-link">View Details</a>  <!-- NEW: Details link -->
     `;
@@ -106,10 +122,24 @@ function renderMemorials(list) {
   console.log("Rendered", list.length, "cards. Delete buttons count:", document.querySelectorAll(".delete-btn").length); // DEBUG: Log after render
   // Log sample IDs (privacy: only first 2)
   console.log("Sample IDs in rendered cards:", list.slice(0, 2).map(m => m.id));
+
+  // Re-attach event delegation for delete (since dynamic)
+  memorialsContainer.removeEventListener('click', handleDeleteClick); // Remove old if any
+  memorialsContainer.addEventListener('click', handleDeleteClick);
+}
+
+// Delete click handler (separate for delegation)
+function handleDeleteClick(e) {
+  if (e.target.classList.contains("delete-btn")) {
+    const id = e.target.dataset.id;
+    console.log("Delete button clicked, ID:", id); // DEBUG: Log on click
+    if (!id) console.error("No/Invalid ID found on delete button!"); // DEBUG: Log error
+    deleteMemorial(id);
+  }
 }
 
 // Add new person
-function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
   e.preventDefault();
 
   const name = document.getElementById("person-name").value.trim();
@@ -123,58 +153,18 @@ function handleFormSubmit(e) {
   }
 
   const newMemorial = {
-    id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
     name,
     birth,
     death,
     bio,
   };
 
-  console.log("Adding new memorial:", newMemorial); // DEBUG: Log new item
-  memorials.push(newMemorial);
-  saveMemorials();
-  closeModal();
-  renderMemorials(memorials);
-}
-
-// Delete
-function deleteMemorial(id) {
-  console.log("deleteMemorial called with ID:", id); // DEBUG: Log on call
-  console.log("Current memorials before delete:", memorials); // DEBUG: Log before delete
-
-  if (!id || id === 'undefined' || id === 'no-id') {
-    console.error("Invalid ID for deletion:", id, "- Aborting!"); // DEBUG: Invalid ID check
-    alert("Error: Invalid ID for the item to delete. Try clearing the database and retrying.");
-    return;
+  const saved = await saveMemorial(newMemorial);
+  if (saved) {
+    closeModal();
+    const updated = await loadMemorials();
+    renderMemorials(updated);
   }
-
-  const confirmed = confirm("Are you sure you want to delete this person?");
-  console.log("User confirmed delete:", confirmed); // DEBUG: Log confirmation
-  if (!confirmed) return;
-
-  // Match ID as string
-  const beforeLength = memorials.length;
-  memorials = memorials.filter((m) => {
-    const shouldKeep = m.id !== id;
-    if (!shouldKeep) console.log("Deleting memorial with ID:", m.id, "Name:", m.name); // DEBUG: Log deleted item
-    return shouldKeep;
-  });
-  const afterLength = memorials.length;
-  console.log("Memorials after filter - before:", beforeLength, "after:", afterLength); // DEBUG: Log length change
-
-  saveMemorials();
-  renderMemorials(memorials);
-}
-
-// Search
-function searchMemorials() {
-  const q = searchInput.value.trim().toLowerCase();
-  console.log("Searching for:", q); // DEBUG: Log query
-  const filtered = memorials.filter((m) =>
-    m.name.toLowerCase().includes(q)
-  );
-  console.log("Filtered results:", filtered); // DEBUG: Log filtered list
-  renderMemorials(filtered);
 }
 
 // Modal controls
@@ -190,6 +180,13 @@ function closeModal() {
   console.log("Modal closed and form reset"); // DEBUG: Log close
 }
 
+// Date formatting helper
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toISOString().split('T')[0];  // YYYY-MM-DD format
+}
+
 // Event Listeners
 createButton.addEventListener("click", openModal);
 closeModalBtn.addEventListener("click", closeModal);
@@ -201,16 +198,11 @@ searchInput.addEventListener("keyup", (e) => {
 });
 
 // Event Delegation for Delete (safe for dynamic buttons)
-memorialsContainer.addEventListener("click", (e) => {
-  console.log("Container clicked on:", e.target); // DEBUG: Log clicked element
-  console.log("Target classes:", e.target.classList); // DEBUG: Log classes
-  if (e.target.classList.contains("delete-btn")) {
-    const id = e.target.dataset.id;
-    console.log("Delete button clicked, ID:", id); // DEBUG: Log on click
-    if (!id || id === 'undefined') console.error("No/Invalid ID found on delete button!"); // DEBUG: Log error
-    deleteMemorial(id);
-  }
-});
+memorialsContainer.addEventListener("click", handleDeleteClick);
 
-// Load cards on start
-renderMemorials(memorials);
+// Initialize app
+async function init() {
+  const list = await loadMemorials();
+  renderMemorials(list);
+}
+init();

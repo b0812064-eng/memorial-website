@@ -1,17 +1,31 @@
-// ---- Elementleri seç ----
+// Select HTML elements
 const detailContent = document.getElementById("detail-placeholder");
 const backButton = document.getElementById("back-button");
 
-// ---- LocalStorage'dan veri yükle ----
-let memorials = JSON.parse(localStorage.getItem("memorials")) || [];
+// Backend URL (local development)
+const API_BASE = 'http://localhost:3000';
 
-// ---- URL'den ID al ----
+// Get ID from URL
 function getMemorialId() {
   const params = new URLSearchParams(window.location.search);
   return params.get("id");
 }
 
-// ---- Detay render et ----
+// Load single memorial from backend
+async function loadMemorial(id) {
+  try {
+    const res = await fetch(`${API_BASE}/memorials/${id}`);
+    if (!res.ok) throw new Error('Memorial not found');
+    const data = await res.json();
+    console.log("Loaded detail for:", data.name); // DEBUG
+    return data;
+  } catch (err) {
+    console.error('Load error:', err);
+    return null;
+  }
+}
+
+// Render detail
 function renderDetail(memorial) {
   if (!memorial) {
     detailContent.innerHTML = `
@@ -23,20 +37,21 @@ function renderDetail(memorial) {
     return;
   }
 
+  const photoSrc = memorial.photo || "https://via.placeholder.com/400x300/6c5ce7/ffffff?text=Photo";
+  const photoAlt = memorial.photo ? `${memorial.name} Photo` : "Default Memorial Photo";
+
   detailContent.innerHTML = `
     <article class="detail-hero">
       <h1>${memorial.name}</h1>
-      <p class="dates-large">${memorial.birth} – ${memorial.death}</p>
-      <!-- Placeholder Photo -->
+      <p class="dates-large">${formatDate(memorial.birth)} – ${formatDate(memorial.death)}</p>
       <div class="photo-placeholder">
-        <img src="https://via.placeholder.com/400x300/6c5ce7/ffffff?text=Photo" alt="${memorial.name} Photo" style="width: 100%; max-width: 400px; border-radius: 12px;">
-        <small>(Photo not uploaded – To be added in the future)</small>
+        <img src="${photoSrc}" alt="${photoAlt}" style="width: 100%; max-width: 400px; border-radius: 12px;">
+        ${!memorial.photo ? '<small>(Photo not uploaded)</small>' : ''}
       </div>
     </article>
     <section class="detail-bio">
       <h2>Life Story</h2>
       <p>${memorial.bio}</p>
-      <!-- In the future: Timeline, Messages -->
       <div class="future-features">
         <h3>Upcoming Features</h3>
         <ul>
@@ -50,22 +65,31 @@ function renderDetail(memorial) {
     <button class="primary-button" onclick="window.history.back();">Go Back</button>
   `;
 
-  backButton.style.display = "block"; // Show back button
-  console.log("Detail rendered for:", memorial.name);
+  backButton.style.display = "block";
+  console.log("Detail rendered for:", memorial.name, "with photo:", !!memorial.photo);
 }
 
-// ---- Back butonu eventi ----
+// Back button
 backButton.addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
-// ---- Başlangıç: ID al ve render et ----
-const id = getMemorialId();
-console.log("Loading detail for ID:", id);
-
-if (id) {
-  const memorial = memorials.find(m => m.id === id);
-  renderDetail(memorial);
-} else {
-  renderDetail(null); // Show error
+// Date formatting helper
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toISOString().split('T')[0];  // YYYY-MM-DD format
 }
+
+// Initialize
+async function init() {
+  const id = getMemorialId();
+  console.log("Loading detail for ID:", id);
+  if (id) {
+    const memorial = await loadMemorial(id);
+    renderDetail(memorial);
+  } else {
+    renderDetail(null);
+  }
+}
+init();
