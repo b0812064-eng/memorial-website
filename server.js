@@ -20,7 +20,7 @@ db.connect(err => {
   console.log('MySQL Connected!');
 });
 
-// Tüm anıtlar getir
+// Tüm anıtlar getir (GET /memorials)
 app.get('/memorials', (req, res) => {
   db.query('SELECT * FROM memorials ORDER BY id DESC', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -28,7 +28,7 @@ app.get('/memorials', (req, res) => {
   });
 });
 
-// Tek anıt getir (YENİ: detail.js için)
+// Tek anıt getir (GET /memorials/:id – detail.js için)
 app.get('/memorials/:id', (req, res) => {
   db.query('SELECT * FROM memorials WHERE id = ?', [req.params.id], (err, results) => {
     if (err || results.length === 0) return res.status(404).json({ error: 'Not found' });
@@ -36,7 +36,7 @@ app.get('/memorials/:id', (req, res) => {
   });
 });
 
-// Yeni ekle
+// Yeni anıt ekle (POST /memorials)
 app.post('/memorials', (req, res) => {
   const { name, birth, death, bio, photo } = req.body;
   const id = uuidv4();
@@ -49,7 +49,7 @@ app.post('/memorials', (req, res) => {
   );
 });
 
-// Sil
+// Anıt sil (DELETE /memorials/:id)
 app.delete('/memorials/:id', (req, res) => {
   db.query('DELETE FROM memorials WHERE id = ?', [req.params.id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -57,7 +57,7 @@ app.delete('/memorials/:id', (req, res) => {
   });
 });
 
-// Arama
+// Arama (GET /memorials/search?q=query)
 app.get('/memorials/search', (req, res) => {
   const q = req.query.q;
   db.query('SELECT * FROM memorials WHERE name LIKE ?', [`%${q}%`], (err, results) => {
